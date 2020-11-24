@@ -10,5 +10,4 @@ public class KafkaLibraryConsumerApplication {
 		SpringApplication.run(KafkaLibraryConsumerApplication.class, args);
 	}
 	
-
 }
