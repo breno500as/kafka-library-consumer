@@ -1,6 +1,5 @@
 package com.kafka.library.consumer.config;
 
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,103 +24,105 @@ import org.springframework.retry.support.RetryTemplate;
 
 import com.kafka.library.consumer.service.LibraryEventsService;
 
+/**
+ * 
+ * @author breno
+ *
+ */
+
 @Configuration
 @EnableKafka
 public class LibraryEventsConsumerConfig {
 	@Autowired
-    LibraryEventsService libraryEventsService;
+	LibraryEventsService libraryEventsService;
 
-    @Autowired
-    KafkaProperties kafkaProperties;
+	@Autowired
+	KafkaProperties kafkaProperties;
 
-    @Bean
-    @ConditionalOnMissingBean(name = "kafkaListenerContainerFactory")
-    ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
-            ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
-            ObjectProvider<ConsumerFactory<Object, Object>> kafkaConsumerFactory) {
-        ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        configurer.configure(factory, kafkaConsumerFactory
-                .getIfAvailable(() -> new DefaultKafkaConsumerFactory<>(this.kafkaProperties.buildConsumerProperties())));
-        factory.setConcurrency(3);
-        // factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setErrorHandler(((thrownException, data) -> {
-         
-            //persist
-        }));
-        factory.setRetryTemplate(retryTemplate());
-        factory.setRecoveryCallback((context -> {
-            if(context.getLastThrowable().getCause() instanceof RecoverableDataAccessException){
-                //invoke recovery logic
-                
-                Arrays.asList(context.attributeNames())
-                        .forEach(attributeName -> {
-                   
-                });
+	@Bean
+	@ConditionalOnMissingBean(name = "kafkaListenerContainerFactory")
+	ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
+			ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
+			ObjectProvider<ConsumerFactory<Object, Object>> kafkaConsumerFactory) {
+		ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+		configurer.configure(factory, kafkaConsumerFactory.getIfAvailable(
+				() -> new DefaultKafkaConsumerFactory<>(this.kafkaProperties.buildConsumerProperties())));
+		factory.setConcurrency(3);
+		// factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+		factory.setErrorHandler(((thrownException, data) -> {
 
-                ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer, String>) context.getAttribute("record");
-                libraryEventsService.handleRecovery(consumerRecord);
-            }else{
-              
-                throw new RuntimeException(context.getLastThrowable().getMessage());
-            }
+			// persist
+		}));
+		factory.setRetryTemplate(retryTemplate());
+		factory.setRecoveryCallback((context -> {
+			if (context.getLastThrowable().getCause() instanceof RecoverableDataAccessException) {
+				// invoke recovery logic
 
+				Arrays.asList(context.attributeNames()).forEach(attributeName -> {
 
-            return null;
-        }));
-        return factory;
-    }
+				});
 
-   /* @Bean
-    ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
-            ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
-            ConsumerFactory<Object, Object> kafkaConsumerFactory) {
-        ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        configurer.configure(factory, kafkaConsumerFactory);
-        factory.setConcurrency(3);
-       // factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setErrorHandler(((thrownException, data) -> {
-            log.info("Exception in consumerConfig is {} and the record is {}", thrownException.getMessage(), data);
-            //persist
-        }));
-        factory.setRetryTemplate(retryTemplate());
-        factory.setRecoveryCallback((context -> {
-            if(context.getLastThrowable().getCause() instanceof RecoverableDataAccessException){
-                //invoke recovery logic
-                log.info("Inside the recoverable logic");
-               Arrays.asList(context.attributeNames())
-                        .forEach(attributeName -> {
-                            log.info("Attribute name is : {} ", attributeName);
-                            log.info("Attribute Value is : {} ", context.getAttribute(attributeName));
-                        });
-               ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer, String>) context.getAttribute("record");
-                libraryEventsService.handleRecovery(consumerRecord);
-            }else{
-                log.info("Inside the non recoverable logic");
-                throw new RuntimeException(context.getLastThrowable().getMessage());
-            }
-            return null;
-        }));
-        return factory;
-    }*/
+				ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer, String>) context
+						.getAttribute("record");
+				libraryEventsService.handleRecovery(consumerRecord);
+			} else {
 
-    private RetryTemplate retryTemplate() {
+				throw new RuntimeException(context.getLastThrowable().getMessage());
+			}
 
-        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
-        fixedBackOffPolicy.setBackOffPeriod(1000);
-        RetryTemplate retryTemplate = new RetryTemplate();
-        retryTemplate.setRetryPolicy(simpleRetryPolicy());
-        retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
-        return  retryTemplate;
-    }
+			return null;
+		}));
+		return factory;
+	}
 
-    private RetryPolicy simpleRetryPolicy() {
+	/*
+	 * @Bean ConcurrentKafkaListenerContainerFactory<?, ?>
+	 * kafkaListenerContainerFactory(
+	 * ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
+	 * ConsumerFactory<Object, Object> kafkaConsumerFactory) {
+	 * ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new
+	 * ConcurrentKafkaListenerContainerFactory<>(); configurer.configure(factory,
+	 * kafkaConsumerFactory); factory.setConcurrency(3); //
+	 * factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.
+	 * MANUAL); factory.setErrorHandler(((thrownException, data) -> {
+	 * log.info("Exception in consumerConfig is {} and the record is {}",
+	 * thrownException.getMessage(), data); //persist }));
+	 * factory.setRetryTemplate(retryTemplate());
+	 * factory.setRecoveryCallback((context -> {
+	 * if(context.getLastThrowable().getCause() instanceof
+	 * RecoverableDataAccessException){ //invoke recovery logic
+	 * log.info("Inside the recoverable logic");
+	 * Arrays.asList(context.attributeNames()) .forEach(attributeName -> {
+	 * log.info("Attribute name is : {} ", attributeName);
+	 * log.info("Attribute Value is : {} ", context.getAttribute(attributeName));
+	 * }); ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer,
+	 * String>) context.getAttribute("record");
+	 * libraryEventsService.handleRecovery(consumerRecord); }else{
+	 * log.info("Inside the non recoverable logic"); throw new
+	 * RuntimeException(context.getLastThrowable().getMessage()); } return null;
+	 * })); return factory; }
+	 */
 
-        /*SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
-        simpleRetryPolicy.setMaxAttempts(3);*/
-        Map<Class<? extends Throwable>, Boolean> exceptionsMap = new HashMap<>();
-        exceptionsMap.put(IllegalArgumentException.class, false);
-        exceptionsMap.put(RecoverableDataAccessException.class, true);
-        SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy(3,exceptionsMap,true);
-        return simpleRetryPolicy;
-    }
+	private RetryTemplate retryTemplate() {
+
+		FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+		fixedBackOffPolicy.setBackOffPeriod(1000);
+		RetryTemplate retryTemplate = new RetryTemplate();
+		retryTemplate.setRetryPolicy(simpleRetryPolicy());
+		retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+		return retryTemplate;
+	}
+
+	private RetryPolicy simpleRetryPolicy() {
+
+		/*
+		 * SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy();
+		 * simpleRetryPolicy.setMaxAttempts(3);
+		 */
+		Map<Class<? extends Throwable>, Boolean> exceptionsMap = new HashMap<>();
+		exceptionsMap.put(IllegalArgumentException.class, false);
+		exceptionsMap.put(RecoverableDataAccessException.class, true);
+		SimpleRetryPolicy simpleRetryPolicy = new SimpleRetryPolicy(3, exceptionsMap, true);
+		return simpleRetryPolicy;
+	}
 }
