@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * kafka spring boot 
  * @author breno.  
- * 
  */ 
 @SpringBootApplication
 public class KafkaLibraryConsumerApplication {
