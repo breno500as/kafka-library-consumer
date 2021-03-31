@@ -5,8 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * kafka spring boot 
- * @author breno.  
- * 
+ * @author breno.
  */ 
 
 @SpringBootApplication
