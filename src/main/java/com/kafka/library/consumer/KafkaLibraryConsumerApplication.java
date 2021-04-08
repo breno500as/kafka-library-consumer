@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author breno.
  */ 
 
-
 @SpringBootApplication
 public class KafkaLibraryConsumerApplication {
 
